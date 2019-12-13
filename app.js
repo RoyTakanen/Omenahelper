@@ -25,7 +25,7 @@ bot.onText(/\/ruoka (.+)/, (msg, lisä) => {
         resp.on('data', (chunk) => {
             data += chunk;
         });
-
+        
         resp.on('end', () => {
             //bot.sendMessage(msg.chat.id, data);
             try {
