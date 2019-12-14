@@ -59,4 +59,4 @@ client.on('message', msg => {
   }
 });
 
-client.login('NjU1MDQ0NDczMTE3NDc0ODE2.XfTS9A.3621ZzxtX9uANjvy-zVlmOtnoGI');
+client.login('TÄHÄN_TOKEN');
