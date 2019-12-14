@@ -23,8 +23,8 @@ client.on('message', msg => {
 
     if (koulu != "") {
       var month = date.getUTCMonth() + 1;
-      https.get('https://api.koulusafka.fi/get/index.php?a=2019-11-13&b=fgfdg905hnm490jiofsdydy346gfgd&c=' + koulu + '&tylyurl=&_=1576054557009', (resp) => {
-      //https.get('https://api.koulusafka.fi/get/index.php?a=' + date.getUTCFullYear() + '-' + month + '-' + date.getUTCDate() + '&b=fgfdg905hnm490jiofsdydy346gfgd&c=' + koulu + '&tylyurl=&_=1576054557009', (resp) => {
+      //https.get('https://api.koulusafka.fi/get/index.php?a=2019-11-13&b=fgfdg905hnm490jiofsdydy346gfgd&c=' + koulu + '&tylyurl=&_=1576054557009', (resp) => {
+      https.get('https://api.koulusafka.fi/get/index.php?a=' + date.getUTCFullYear() + '-' + month + '-' + date.getUTCDate() + '&b=fgfdg905hnm490jiofsdydy346gfgd&c=' + koulu + '&tylyurl=&_=1576054557009', (resp) => {
       var formattedday = moment(date.getUTCFullYear() + '-' + month + '-' + date.getUTCDate());
       var data = '';
 
@@ -58,4 +58,4 @@ client.on('message', msg => {
   }
 });
 
-client.login('TÄHÄN_TOKEN');
+client.login('NjU1MDQ0NDczMTE3NDc0ODE2.XfStPg.Yr4j5fGogvZmwDfL3M0aLCZG2tg');
