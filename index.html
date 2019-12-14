@@ -332,5 +332,30 @@
    <td>ashjodens_grundskola</td>
 </tr>
 </table>
+<footer>
+  <h4>Kerätty node.js skriptillä:</h4>  
+  <pre>
+      https.get('https://api.koulusafka.fi/info/schools.php', (resp) => {
+        var data = '';
+        var koulut = '';
+
+        resp.on('data', (chunk) => {
+          data += chunk;
+        });
+
+        resp.on('end', () => {
+          jsondata = JSON.parse(data);
+
+          koulut = 'Helsingin koulut:\n';
+          for (var i = 0; i < jsondata.regions[0].values.length; i++) {
+            koulut += "&lt;tr>";
+            koulut += "   &lt;td>" + jsondata.regions[0].values[i].name + "&lt;/td>\n   &lt;td>" + jsondata.regions[0].values[i].id + "&lt;/td>\n";
+            koulut += "&lt;/tr>";
+          }
+          console.log(koulut);
+        });
+    });
+  </pre>
+</footer>
 </body>
 </html>
