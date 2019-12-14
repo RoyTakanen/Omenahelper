@@ -9,7 +9,8 @@ const client = new discord.Client();
 var date = new Date();
 
 client.on('ready', () => {
-  console.log("Logged in as " + client.user.tag)
+  console.log("Logged in as " + client.user.tag);
+  client.user.setPresence({ game: { name: 'kouluruoan etsintää' }, status: 'available' }).catch(console.error);
 });
 
 client.on('message', msg => {
@@ -58,4 +59,4 @@ client.on('message', msg => {
   }
 });
 
-client.login('TOKEN_TÄHÄN');
+client.login('NjU1MDQ0NDczMTE3NDc0ODE2.XfTS9A.3621ZzxtX9uANjvy-zVlmOtnoGI');
