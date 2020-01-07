@@ -2,7 +2,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const https = require('https');
 const moment = require('moment');
 
-const token = '';
+const token = '921615910:AAEQ0IOxzHnqA9aD0nrabQHBvHprFEDS2t4';
 
 const bot = new TelegramBot(token, {polling: true});
 
@@ -25,23 +25,24 @@ bot.onText(/\/ruoka (.+)/, (msg, lisä) => {
         resp.on('data', (chunk) => {
             data += chunk;
         });
-        
+
         resp.on('end', () => {
             //bot.sendMessage(msg.chat.id, data);
             try {
                 jsondata = JSON.parse(data);
-                        
                 paivat = ["Ma:", "Ti:", "Ke:", "To:", "Pe:"];
-    
+
                 var viesti = "Ruokana on (vko " + formattedday.week() + "):\n";
-                for (let nro = 0; nro < 5; nro++) {
-                    viesti += paivat[nro] + ' ' + jsondata.foods[nro].lunch + "\n";
-                }
+                var nro = 0;
+                jsondata.foods.forEach(function(element){
+                  viesti += paivat[nro] + " " + element.lunch + "\n";
+                  nro++;
+                });
             } catch(error) {
                 console.log("Error " + error);
                 viesti = "Virheellinen päivämäärä\n"
             }
-            
+
             viesti += "\nTekijänä Roy";
             bot.sendMessage(msg.chat.id, viesti)
         });
@@ -63,27 +64,27 @@ bot.on('message', (msg) => {
             resp.on('data', (chunk) => {
                 data += chunk;
             });
-    
+
             resp.on('end', () => {
                 //bot.sendMessage(msg.chat.id, data);
                 try {
                     jsondata = JSON.parse(data);
-                            
                     paivat = ["Ma:", "Ti:", "Ke:", "To:", "Pe:"];
-        
+
                     var viesti = "Ruokana on (vko " + formattedday.week() + "):\n";
-                    for (let nro = 0; nro < 5; nro++) {
-                        viesti += paivat[nro] + ' ' + jsondata.foods[nro].lunch + "\n";
-                    }
+                    var nro = 0;
+                    jsondata.foods.forEach(function(element){
+                      viesti += paivat[nro] + " " + element.lunch + "\n";
+                      nro++;
+                    });
                 } catch(error) {
                     console.log("Error " + error);
                     viesti = "Virheellinen päivämäärä. Tänään on " + formattedday.format("MMM Do YY"); + "\n";
                 }
-                
                 viesti += "\nTekijänä Roy";
                 bot.sendMessage(msg.chat.id, viesti)
             });
-        });    
+        });
     }
     if (msg.text.toString().toLowerCase().includes("/start" || msg.text.toString().toLowerCase() == "/start@omenahelper_bot")) {
         bot.sendMessage(msg.chat.id, "Kouluruoka Aurinkolahden Peruskolussa\n\nKäyttää koulusafka.fi:n APIa\nTekijänä t.me/roysuomi\nGithub: github.com/kaikkitietokoneista/omenahelper\nKrediitit Roylle\n\n Viesti /apua kertoo kuinka tätä kuuluu käyttää.")
