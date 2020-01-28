@@ -6,14 +6,14 @@ const token = '';
 
 const bot = new TelegramBot(token, {polling: true});
 
-var date = new Date();
-
 //https://api.koulusafka.fi/get/index.php?a=2019-12-11&b=fgfdg905hnm490jiofsdydy346gfgd&c=Aurinkolahden_peruskoulu&tylyurl=&_=1576054557009
 
 
 /* Korjaa ettei voi häkätä eli lisää on error */
 
 bot.onText(/\/ruoka (.+)/, (msg, lisä) => {
+    var date = new Date();
+
     var year = lisä[1];
 
     //Pitää lähettää /ruoka 2019-08-11
@@ -55,6 +55,8 @@ bot.onText(/\/ruoka (.+)/, (msg, lisä) => {
 
 //Start komento
 bot.on('message', (msg) => {
+    var date = new Date();
+
     if (msg.text.toString().toLowerCase() == "/ruoka" || msg.text.toString().toLowerCase() == "/ruoka@omenahelper_bot") {
         var month = date.getUTCMonth() + 1;
         https.get('https://api.koulusafka.fi/get/index.php?a=' + date.getUTCFullYear() + '-' + month + '-' + date.getUTCDate() + '&b=fgfdg905hnm490jiofsdydy346gfgd&c=Aurinkolahden_peruskoulu&tylyurl=&_=1576054557009', (resp) => {
