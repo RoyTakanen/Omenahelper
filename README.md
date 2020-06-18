@@ -1,4 +1,5 @@
 # Omenahelper
+[![Run on Repl.it](https://repl.it/badge/github/kaikkitietokoneista/Omenahelper)](https://repl.it/github/kaikkitietokoneista/Omenahelper)
 Omenahelper on Telegram  ja Discord-botti, joka kertoo ruuan koulusafka.fi:n API:n avulla
 
 ## Käyttäminen
