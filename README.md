@@ -26,3 +26,7 @@ Discordissa tee uusi botti ja lisää sen token kohtaan client.token('TÄHÄN_TO
 
 1. Säännöllinen viestinlähetys
 2. Tämä myös Discordiin
+3. Läksyt
+4. Parempi konfigurointi
+5. Siistimpi koodi
+6. Vaihda request-kirjastoon
