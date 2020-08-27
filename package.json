@@ -1,0 +1,32 @@
+{
+  "name": "omenahelper",
+  "version": "2.0.0",
+  "description": "Omenahelper auttaa sinua koulunkäynnissä useilla eri tavoilla.",
+  "main": "app.js",
+  "scripts": {
+    "test": "node ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kaikkitietokoneista/Omenahelper.git"
+  },
+  "keywords": [
+    "Omenahelper",
+    "School",
+    "Assistant"
+  ],
+  "author": "Kaikkitietokoneista",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/kaikkitietokoneista/Omenahelper/issues"
+  },
+  "homepage": "https://github.com/kaikkitietokoneista/Omenahelper#readme",
+  "dependencies": {
+    "discord.js": "^12.3.1",
+    "ical.js": "^1.4.0",
+    "js-levenshtein": "^1.1.6",
+    "moment": "^2.27.0",
+    "node-telegram-bot-api": "^0.50.0",
+    "request": "^2.88.2"
+  }
+}

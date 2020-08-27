@@ -1,12 +1,12 @@
 # Omenahelper
-[![Run on Repl.it](https://repl.it/badge/github/kaikkitietokoneista/Omenahelper)](https://repl.it/github/kaikkitietokoneista/Omenahelper)
+
 Omenahelper on Telegram  ja Discord-botti, joka kertoo ruuan koulusafka.fi:n API:n avulla
 
 ## Käyttäminen
 
-Telegramissa lisää käyttäjä http://t.me/Omenahelper_bot haluamaasi ryhmään. Voit myös tehdä oman botin ja lisätä sen tokenin telegram.js-tiedoston token kohtaan.
+Telegramissa lisää käyttäjä http://t.me/Omenahelper_bot haluamaasi ryhmään.
 
-Discordissa tee uusi botti ja lisää sen token kohtaan client.token('TÄHÄN_TOKEN'). 
+Discordissa lisää käyttäjä x haluamaasi ryhmään.
 
 ## Ominaisuudet
 
@@ -30,3 +30,7 @@ Discordissa tee uusi botti ja lisää sen token kohtaan client.token('TÄHÄN_TO
 4. Parempi konfigurointi
 5. Siistimpi koodi
 6. Vaihda request-kirjastoon
+7. Oma hallinointiliittymä
+8. Oma tehtävien tallennus ja lisäys
+9. Parempi koulujen listaus (CSS jne.)
+10. Kouluissa mahdollista antaa vain ID
