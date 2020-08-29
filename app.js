@@ -69,10 +69,8 @@ if (config.telegram.enabled) {
             let due = vtodo.getFirstPropertyValue('due')
 
             //console.log(new Date(due.toString()).getTime())
-            if (args[1] === "tulevat") {
-              if (new Date(due.toString()).getTime() > date.getTime()) {
-                viesti += `<b>${summary}</b>: <i>${description}</i>\n`
-              }
+            if (args[1] === "kaikki") {
+              viesti += `<b>${summary}</b>: <i>${description}</i>\n`
             } else if (args[1] === "menneet") {
               if (new Date(due.toString()).getTime() < date.getTime()) {
                 viesti += `<b>${summary}</b>: <i>${description}</i>\n`
@@ -114,9 +112,7 @@ if (config.telegram.enabled) {
             let due = vtodo.getFirstPropertyValue('due')
 
             if (new Date(due.toString()).getTime() > date.getTime()) {
-              viesti += `<b>${summary}</b> (Tulossa): <i>${description}</i>\n`
-            } else if (new Date(due.toString()).getTime() < date.getTime()) {
-              viesti += `<b>${summary}</b> (Mennyt): <i>${description}</i>\n`
+              viesti += `<b>${summary}</b>: <i>${description}</i>\n`
             }
           })
         } catch (e) {
