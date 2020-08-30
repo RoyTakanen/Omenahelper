@@ -1,22 +1,28 @@
 {
   "discord": {
     "enabled": true,
-    "key": "NjU1MDQ0NDczMTE3NDc0ODE2.XfOXtA.GkAHuVW70XHObn95YaCGeLYGw_A"
+    "key": ""
   },
   "telegram": {
     "enabled": true,
-    "key": "921615910:AAEQ0IOxzHnqA9aD0nrabQHBvHprFEDS2t4"
+    "key": ""
   },
   "laksyt": {
     "enabled": true,
-    "username": "Erikoisjaakari",
-    "password": "salaword",
+    "username": "",
+    "password": "",
     "url": "https://asdew.kaikkitietokoneista.net/remote.php/dav/calendars/Erikoisjaakari/school_shared_by_Asdew?export"
   },
   "tervehdys": {
     "enabled": false
   },
   "weather": {
-    "enabled": false
+    "enabled": true,
+    "key": ""
+  },
+  "hakukone": {
+    "enabled": true,
+    "url": "https://searx.asdew.kaikkitietokoneista.net/",
+    "protocol": "https"
   }
 }

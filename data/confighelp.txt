@@ -1,0 +1,3 @@
+omena - näyttää tuen
+ruoka - näyttää ruuan
+laksyt - päivän läksyt

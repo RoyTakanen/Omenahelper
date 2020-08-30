@@ -5,8 +5,21 @@ const fs = require('fs');
 const ICAL = require('ical.js');
 const discord = require('discord.js');
 const levenshtein = require('js-levenshtein');
+const weather = require('openweather-apis');
+const Searxuser = require('searx-api');
 
 const config = JSON.parse(fs.readFileSync('./data/config.json'))
+
+weather.setLang('fi');
+weather.setUnits('metric');
+weather.setAPPID(config.weather.key);
+
+const searx = new Searxuser(
+  config.hakukone.url, //Url
+  config.hakukone.protocol, //Protocol
+  'fi-FI', //Language
+  '1' //Safe search
+)
 
 // MUUTTUJAT
 const paivat = ["<b>Ma:</b>", "<b>Ti:</b>", "<b>Ke:</b>", "<b>To:</b>", "<b>Pe:</b>"];
@@ -36,12 +49,91 @@ function vertaaKoulut(nimi) {
   }
 }
 
+function icontToEmoji(icon) {
+  /* icon to emoji */
+  if (icon == "01d") {
+    return '🌞';
+  }
+  else if (icon == "02d" || "02n") {
+    return '⛅';
+  }
+  else if (icon == "03d" || "03n") {
+    return '☁️';
+  }
+  else if (icon == "04d"|| "04n") {
+    return '☁️';
+  }
+  else if (icon == "09d" || "09n") {
+    return '🌧️';
+  }
+  else if (icon == "10d" || "10n") {
+    return '🌧️';
+  }
+  else if (icon == "11d" || "11n") {
+    return '⛈️';
+  }
+  else if (icon == "13d" || "13n") {
+    return '❄️';
+  }
+  else if (icon == "50d" || "50n") {
+    return '🌫️';
+  }
+}
+
 // TELEGRAM
 if (config.telegram.enabled) {
 
   const tgtoken = config.telegram.key;
 
   const tgbot = new Telegramtgbot(tgtoken, {polling: true});
+
+  //SÄÄ
+  if (config.weather.enabled) {
+    tgbot.onText(/\/weather (.+)/, (msg, args) => {
+
+      weather.setCity(args[1]);
+      weather.getAllWeather(function(err, json){
+        if(err) throw (err);
+        //console.log(json);
+
+        if (json.cod == "429") {
+          tgbot.sendMessage(msg.chat.id, "Olemme saavuttaneet maksimipyyntömme tältä minuutilta.. 😔");
+        }
+        if (json.cod == "404") {
+          tgbot.sendMessage(msg.chat.id, "Kaupunkia ei löydy. 🧐");
+        }  else {
+          //var imgurl = 'http://openweathermap.org/img/w/' + json.weather[0].icon + '.png';
+          //bot.sendPhoto(msg.chat.id, imgurl)
+          tgbot.sendMessage(msg.chat.id, "Kaupunki: " + args[1] + "\nLämpötila: " + json.main.temp + "°C🌡\nKuvaus: " + json.weather[0].description + icontToEmoji(json.weather[0].icon) + "\nKosteus: " + json.main.humidity + "%" + "\nIlmanpaine: " + json.main.pressure + " hPa" + "\nTuuli: " + json.wind.speed + "m/s💨\nValtio: " + json.sys.country);
+        }
+      });
+    });
+
+    tgbot.onText(/\/weather$/, (msg, args) => {
+      tgbot.sendMessage(msg.chat.id, "Valitse kaupunki listalta tai lähetä se noudattaen syntaksia /weather Helsinki.", {
+        "reply_markup": {
+          "keyboard": [["/weather Helsinki"], ["/weather New York"], ["/weather Berlin"], ["/weather Sydney"], ["/weather London"], ["/weather Beijing"], ["/weather Tokyo"], ["/weather Johannesburg"], ["/weather Cairo"]]
+        }
+      });
+    })
+  }
+
+  //HAKUKONE
+  if (config.hakukone.enabled) {
+    tgbot.onText(/\/hae (.+)/, (msg, args) => {
+      let viesti
+      args.shift()
+      searx.find(args.join(" "), function(data) {
+        data.results.forEach((item) => {
+          viesti += `<b><a href="${item.url}">${item.title}</a></b>\n<i>${item.content}</i>\n\n`
+        });
+        tgbot.sendMessage(msg.chat.id, viesti.replace("undefined", ""),{
+          parse_mode : "HTML",
+          disable_web_page_preview: true
+        });
+      });
+    });
+  }
 
   //LÄKSYT
   if (config.laksyt.enabled) {
@@ -70,10 +162,10 @@ if (config.telegram.enabled) {
 
             //console.log(new Date(due.toString()).getTime())
             if (args[1] === "kaikki") {
-              viesti += `<b>${summary}</b>: <i>${description}</i>\n`
+              viesti += `<b>${summary}</b>:\n<code>${description}</code>\n`
             } else if (args[1] === "menneet") {
               if (new Date(due.toString()).getTime() < date.getTime()) {
-                viesti += `<b>${summary}</b>: <i>${description}</i>\n`
+                viesti += `<b>${summary}</b>:\n<code>${description}</code>\n`
               }
             }
           })
@@ -112,7 +204,7 @@ if (config.telegram.enabled) {
             let due = vtodo.getFirstPropertyValue('due')
 
             if (new Date(due.toString()).getTime() > date.getTime()) {
-              viesti += `<b>${summary}</b>: <i>${description}</i>\n`
+              viesti += `<b>${summary}</b>:\n<code>${description}</code>\n`
             }
           })
         } catch (e) {
@@ -183,10 +275,12 @@ if (config.telegram.enabled) {
   //TUKI
   tgbot.on('message', (msg) => {
       if (msg.text.toString().toLowerCase().includes("/start" || msg.text.toString().toLowerCase() == "/start@omenahelper_tgbot")) {
-          tgbot.sendMessage(msg.chat.id, "Kouluruoka Aurinkolahden Peruskolussa\n\nKäyttää koulusafka.fi:n APIa\nTekijänä t.me/roysuomi\nGithub: github.com/kaikkitietokoneista/omenahelper\nKrediitit Roylle\n\n Viesti /apua kertoo kuinka tätä kuuluu käyttää.")
+          tgbot.sendMessage(msg.chat.id, "Yleinen tukibotti lähes kaikkeen.\n\nTekijänä t.me/roysuomi\nGithub: github.com/kaikkitietokoneista/omenahelper\nKrediitit Roylle\n\nViesti /omena auttaa sinua käytön kanssa.")
       }
-      else if (msg.text.toString().toLowerCase().includes("/apua" || msg.text.toString().toLowerCase() == "/apua@omenahelper_tgbot")) {
-          tgbot.sendMessage(msg.chat.id, "Komentosyntaksi on seuraavanlainen:\n/apua  - näyttää tämän\n/ruoka - kertoo nykyisen viikon ruoan\n/ruoka 2019-08-11 - kertoo päivämäärän viikon ruoan")
+      else if (msg.text.toString().toLowerCase().includes("/omena" || msg.text.toString().toLowerCase() == "/omena@omenahelper_tgbot")) {
+        tgbot.sendMessage(msg.chat.id, `Osaan auttaa sinua Telegrammissa neljän asian kanssa: \n\n1. Läksyjen:\n\t<code>/laksyt</code>\n\t<code>/laksyt kaikki</code>\n\t<code>/laksyt menneet</code>\n2. ja ruuan\n\t<code>/ruoka</code>\n\t<code>/ruoka 2019-08-11</code>\n3. sekä sään\n\t<code>/weather</code>\n\t<code>/weather Helsinki</code>\n4. että tiedonhaun\n\t<code>/hae Kaikkitietokoneista</code>`, {
+          parse_mode: "HTML"
+        })
       }
   });
 
@@ -196,8 +290,7 @@ if (config.telegram.enabled) {
 }
 
 // DISCORD
-
-if (config.telegram.enabled) {
+if (config.discord.enabled) {
   const dcbot = new discord.Client();
 
   dcbot.on('ready', () => {
@@ -209,11 +302,13 @@ if (config.telegram.enabled) {
   });
 
   dcbot.on('message', msg => {
+    //RUOKA KOULUT
     if (msg.content == "!koulut") {
       msg.channel.send("Helsingin koulut: https://kaikkitietokoneista.github.io/Omenahelper/index.html")
     }
+    //RUOKA
     if (msg.content.startsWith("!ruoka")) {
-      var koulu = msg.content.substr("!ruoka ".length);
+      let koulu = msg.content.substr("!ruoka ".length);
 
       if (koulu != "") {
         let etsittykoulu = vertaaKoulut(koulu);
@@ -241,44 +336,49 @@ if (config.telegram.enabled) {
       } else {
         msg.reply("Et kertonut koulua (saat koulut komennolla _!koulut_)");
       }
-    } else if (msg.content.startsWith("!laksyt")) {
-      request(config.laksyt.url, {
-        method: "GET",
-        followAllRedirects: true,
-        auth: {
-          user: config.laksyt.username,
-          pass: config.laksyt.password
-        }
-      }, function (error, response, kalenteridata) {
-        let date = new Date()
-        let viesti = ''
+    }
+    //HAKUKONE
+    else if (msg.content.startsWith("!hae") && config.hakukone.enabled) {
+      let args = msg.content.split(' ')
+      let viesti
+      args.shift()
+      searx.find(args.join(" "), function(data) {
+        data.results.forEach((item, i) => {
+          if (i < 5) {
+            viesti += `**[${item.url}](${item.title})**\n_${item.content}_\n\n`
+          }
+        });
+        console.log(viesti);
+        msg.reply(viesti.replace("undefined", ""));
+      });
+    }
+    //SÄÄ
+    else if (msg.content.startsWith("!sää") && config.weather.enabled) {
+      let koulu = msg.content.split(' ')[1]
+      if (koulu) {
+        weather.setCity(koulu);
+        weather.getAllWeather(function(err, json){
+          if(err) throw (err);
+          //console.log(json);
 
-        try {
-          let jcalData = ICAL.parse(kalenteridata)
-          let vcalendar = new ICAL.Component(jcalData)
-          let vtodos = vcalendar.getAllSubcomponents('vtodo')
-          viesti += '**Tehtävät: **\n\n'
-
-          vtodos.forEach((vtodo, i) => {
-            let summary = vtodo.getFirstPropertyValue('summary')
-            let description = vtodo.getFirstPropertyValue('description')
-            let due = vtodo.getFirstPropertyValue('due')
-
-            if (new Date(due.toString()).getTime() > date.getTime()) {
-              viesti += `${summary} (Tulossa): _${description}_\n`
-            } else if (new Date(due.toString()).getTime() < date.getTime()) {
-              viesti += `${summary} (Mennyt): _${description}_\n`
-            }
-          })
-        } catch (e) {
-          console.log(e);
-          viesti += 'Jotakin meni pieleen. Yritä myöhemmin uudestaan. Ota tarvittaessa yhteyttä ylläpitoon.'
-        } finally {
-          msg.reply(viesti);
-        }
-      })
-    } else if (msg.content.startsWith("!omena")) {
-      msg.reply(`Osaan auttaa sinua Discordissa kahden asian kanssa: \n\n1. Läksyjen (_!laksyt_)\n2. ja ruuan (_!ruoka_)\n\t- katso koulut (_!koulut_)`);
+          if (json.cod == "429") {
+            msg.reply("Olemme saavuttaneet maksimipyyntömme tältä minuutilta.. 😔");
+          }
+          if (json.cod == "404") {
+            msg.reply("Kaupunkia ei löydy. 🧐");
+          }  else {
+            //var imgurl = 'http://openweathermap.org/img/w/' + json.weather[0].icon + '.png';
+            //bot.sendPhoto(msg.chat.id, imgurl)
+            msg.reply("Kaupunki: " + koulu + "\nLämpötila: " + json.main.temp + "°C🌡\nKuvaus: " + json.weather[0].description + icontToEmoji(json.weather[0].icon) + "\nKosteus: " + json.main.humidity + "%" + "\nIlmanpaine: " + json.main.pressure + " hPa" + "\nTuuli: " + json.wind.speed + "m/s💨\nValtio: " + json.sys.country);
+          }
+        });
+      } else {
+        msg.reply("Lähetä kaupunki noudattaen syntaksia !sää Helsinki")
+      }
+    }
+    //TUKI
+    else if (msg.content.startsWith("!omena")) {
+      msg.reply(`Osaan auttaa sinua Discordissa kolmen asian kanssa: \n`+/*\n1. Läksyjen (_!laksyt_) (Kehityksen alla)*/`\n1. ruuan (_!ruoka_)\n\t- katso koulut (_!koulut_)\n2. ja sään (_!sää_)\n3. sekä tiedonhaun kanssa (_!hae jotakin_)`);
     }
   });
 
