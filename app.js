@@ -110,28 +110,31 @@ if (config.telegram.enabled) {
     });
 
     tgbot.onText(/\/weather$/, (msg, args) => {
-      tgbot.sendMessage(msg.chat.id, "Valitse kaupunki listalta tai lähetä se noudattaen syntaksia /weather Helsinki.", {
-        "reply_markup": {
-          "keyboard": [["/weather Helsinki"], ["/weather New York"], ["/weather Berlin"], ["/weather Sydney"], ["/weather London"], ["/weather Beijing"], ["/weather Tokyo"], ["/weather Johannesburg"], ["/weather Cairo"]]
-        }
-      });
+      tgbot.sendMessage(msg.chat.id, "Lähetä kaupunki noudattaen syntaksia /weather Helsinki.");
     })
   }
 
   //HAKUKONE
   if (config.hakukone.enabled) {
     tgbot.onText(/\/hae (.+)/, (msg, args) => {
-      let viesti
-      args.shift()
-      searx.find(args.join(" "), function(data) {
-        data.results.forEach((item) => {
-          viesti += `<b><a href="${item.url}">${item.title}</a></b>\n<i>${item.content}</i>\n\n`
+      try {
+        let viesti
+        args.shift()
+        searx.find(args.join(" "), function(data) {
+          data.results.forEach((item) => {
+            viesti += `<b><a href="${item.url}">${item.title}</a></b>\n<i>${item.content}</i>\n\n`
+          });
+          tgbot.sendMessage(msg.chat.id, viesti.replace("undefined", ""),{
+            parse_mode : "HTML",
+            disable_web_page_preview: true
+          });
         });
-        tgbot.sendMessage(msg.chat.id, viesti.replace("undefined", ""),{
+      } catch (e) {
+        tgbot.sendMessage(msg.chat.id, "<b>Virhe suoritettaessa hakua</b>",{
           parse_mode : "HTML",
           disable_web_page_preview: true
         });
-      });
+      }
     });
   }
 
@@ -139,46 +142,6 @@ if (config.telegram.enabled) {
   if (config.laksyt.enabled) {
 
     console.log("Läksyjen näyttäminen on käytössä.")
-    tgbot.onText(/\/laksyt (.+)/, (msg, args) => {
-      request('https://asdew.kaikkitietokoneista.net/remote.php/dav/calendars/Erikoisjaakari/school_shared_by_Asdew?export', {
-        method: "GET",
-        auth: {
-          user: config.laksyt.username,
-          pass: config.laksyt.password
-        }
-      }, function (error, response, kalenteridata) {
-        let date = new Date()
-        let viesti = ''
-
-        try {
-          let jcalData = ICAL.parse(kalenteridata)
-          let vcalendar = new ICAL.Component(jcalData)
-          let vtodos = vcalendar.getAllSubcomponents('vtodo')
-
-          vtodos.forEach((vtodo, i) => {
-            let summary = vtodo.getFirstPropertyValue('summary')
-            let description = vtodo.getFirstPropertyValue('description')
-            let due = vtodo.getFirstPropertyValue('due')
-
-            //console.log(new Date(due.toString()).getTime())
-            if (args[1] === "kaikki") {
-              viesti += `<b>${summary}</b>:\n<code>${description}</code>\n`
-            } else if (args[1] === "menneet") {
-              if (new Date(due.toString()).getTime() < date.getTime()) {
-                viesti += `<b>${summary}</b>:\n<code>${description}</code>\n`
-              }
-            }
-          })
-        } catch (e) {
-          console.log(e);
-          viesti += 'Jotakin meni pieleen. Yritä myöhemmin uudestaan. Ota tarvittaessa yhteyttä ylläpitoon.'
-        } finally {
-          tgbot.sendMessage(msg.chat.id, viesti, {
-            parse_mode: "HTML"
-          })
-        }
-      })
-    })
 
     tgbot.onText(/\/laksyt$/, (msg, args) => {
       request(config.laksyt.url, {
@@ -191,6 +154,7 @@ if (config.telegram.enabled) {
       }, function (error, response, kalenteridata) {
         let date = new Date()
         let viesti = ''
+        let tehtavat = []
 
         try {
           let jcalData = ICAL.parse(kalenteridata)
@@ -202,11 +166,18 @@ if (config.telegram.enabled) {
             let summary = vtodo.getFirstPropertyValue('summary')
             let description = vtodo.getFirstPropertyValue('description')
             let due = vtodo.getFirstPropertyValue('due')
+            let duetimestamp = new Date(due.toString()).getTime()
 
-            if (new Date(due.toString()).getTime() > date.getTime()) {
-              viesti += `<b>${summary}</b>:\n<code>${description}</code>\n`
+            if (duetimestamp > date.getTime()) {
+              tehtavat.push({summary: summary, description: description, due: due, duetimestamp: duetimestamp})
             }
-          })
+          });
+
+          tehtavat.sort((a, b) => a.duetimestamp - b.duetimestamp)
+
+          tehtavat.forEach(({summary, description, due, duetimestamp}, i) => {
+            viesti += `<b>${summary} (</b><i>${moment.unix(duetimestamp/1000).locale('fi').format('LL')}</i><b>)</b>:\n<code>${description}</code>\n`
+          });
         } catch (e) {
           console.log(e);
           viesti += 'Jotakin meni pieleen. Yritä myöhemmin uudestaan. Ota tarvittaessa yhteyttä ylläpitoon.'
@@ -337,20 +308,68 @@ if (config.discord.enabled) {
         msg.reply("Et kertonut koulua (saat koulut komennolla _!koulut_)");
       }
     }
+    //LÄKSYT
+    else if (msg.content.startsWith("!läksyt") && config.laksyt.enabled) {
+      request(config.laksyt.url, {
+        method: "GET",
+        followAllRedirects: true,
+        auth: {
+          user: config.laksyt.username,
+          pass: config.laksyt.password
+        }
+      }, function (error, response, kalenteridata) {
+        let date = new Date()
+        let viesti = ''
+        let tehtavat = []
+
+        try {
+          let jcalData = ICAL.parse(kalenteridata)
+          let vcalendar = new ICAL.Component(jcalData)
+          let vtodos = vcalendar.getAllSubcomponents('vtodo')
+          viesti += '**Tehtävät: **\n\n'
+
+          vtodos.forEach((vtodo, i) => {
+            let summary = vtodo.getFirstPropertyValue('summary')
+            let description = vtodo.getFirstPropertyValue('description')
+            let due = vtodo.getFirstPropertyValue('due')
+            let duetimestamp = new Date(due.toString()).getTime()
+
+            if (duetimestamp > date.getTime()) {
+              tehtavat.push({summary: summary, description: description, due: due, duetimestamp: duetimestamp})
+            }
+          });
+
+          tehtavat.sort((a, b) => a.duetimestamp - b.duetimestamp)
+
+          tehtavat.forEach(({summary, description, due, duetimestamp}, i) => {
+            viesti += `**${summary} (**_${moment.unix(duetimestamp/1000).locale('fi').format('LL')}_**)**:\n\`\`\`${description} \`\`\`\n`
+          });
+        } catch (e) {
+          console.log(e);
+          viesti += 'Jotakin meni pieleen. Yritä myöhemmin uudestaan. Ota tarvittaessa yhteyttä ylläpitoon.'
+        } finally {
+          msg.reply(viesti)
+        }
+      })
+    }
+
     //HAKUKONE
     else if (msg.content.startsWith("!hae") && config.hakukone.enabled) {
-      let args = msg.content.split(' ')
-      let viesti
-      args.shift()
-      searx.find(args.join(" "), function(data) {
-        data.results.forEach((item, i) => {
-          if (i < 5) {
-            viesti += `**[${item.url}](${item.title})**\n_${item.content}_\n\n`
-          }
+      try {
+        let args = msg.content.split(' ')
+        let viesti
+        args.shift()
+        searx.find(args.join(" "), function(data) {
+          data.results.forEach((item, i) => {
+            if (i < 5) {
+              viesti += `**[${item.url}](${item.title})**\n_${item.content}_\n\n`
+            }
+          });
+          msg.reply(viesti.replace("undefined", ""));
         });
-        console.log(viesti);
-        msg.reply(viesti.replace("undefined", ""));
-      });
+      } catch (e) {
+        msg.reply("Jotakin meni pahasti pieleen")
+      }
     }
     //SÄÄ
     else if (msg.content.startsWith("!sää") && config.weather.enabled) {
