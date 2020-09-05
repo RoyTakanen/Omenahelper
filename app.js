@@ -7,7 +7,9 @@ const discord = require('discord.js');
 const levenshtein = require('js-levenshtein');
 const weather = require('openweather-apis');
 const Searxuser = require('searx-api');
+const NodeCache = require( "node-cache" );
 
+const cache = new NodeCache();
 const config = JSON.parse(fs.readFileSync('./data/config.json'))
 
 weather.setLang('fi');
@@ -162,7 +164,7 @@ if (config.telegram.enabled) {
           let vtodos = vcalendar.getAllSubcomponents('vtodo')
           viesti += '<b>Tehtävät: </b>\n\n'
 
-          vtodos.forEach((vtodo, i) => {
+          vtodos.forEach((vtodo) => {
             let summary = vtodo.getFirstPropertyValue('summary')
             let description = vtodo.getFirstPropertyValue('description')
             let due = vtodo.getFirstPropertyValue('due')
@@ -178,6 +180,10 @@ if (config.telegram.enabled) {
           tehtavat.forEach(({summary, description, due, duetimestamp}, i) => {
             viesti += `<b>${summary} (</b><i>${moment.unix(duetimestamp/1000).locale('fi').format('LL')}</i><b>)</b>:\n<code>${description}</code>\n`
           });
+
+//          success = myCache.set( "läksyt", {
+//            viesti: viesti
+//          }, 43200 )
         } catch (e) {
           console.log(e);
           viesti += 'Jotakin meni pieleen. Yritä myöhemmin uudestaan. Ota tarvittaessa yhteyttä ylläpitoon.'
@@ -189,6 +195,38 @@ if (config.telegram.enabled) {
       })
     })
   }
+
+  // STEAM
+  /*
+  tgbot.onText(/\/steam (.+)/, (msg, args) => {
+
+    const name = args[1]; 
+    steam.resolve(`https://steamcommunity.com/id/${name}`).then(id => {
+      steam.getUserBans(id).then(bans => {
+        steam.getUserLevel(id).then(level => {
+          steam.getUserRecentGames(id).then(recgames => {
+            steam.getUserSummary(id).then(summary => {
+              tgbot.sendMessage(msg.chat.id, `
+              <b>Steam-tilin ${name} tiedot:</b>
+  
+  SteamID: <code>${summary.steamID}</code>
+  Taso: <code>${level}</code>
+  Viimeisin uloskirjautuminen: <code>${moment.unix(summary.lastLogOff).toLocaleString()}</code>
+  Luotu: <code>${moment.unix(summary.created).toLocaleString()}</code>
+  URL: <a href="${summary.url}">${summary.url}</a>
+  VAC Bans: <code>${bans.vacBans}</code>
+  Game Bans: <code>${bans.gameBans}</code>
+  <i>Viimeisestä bannistä on ${bans.daysSinceLastBan} päivää</i>
+  Viimeisin pelattu peli: <code>${recgames[0].name}</code>
+              `,{parse_mode : "HTML"});
+            });
+          });
+  
+        })
+      })
+    });
+  });  
+*/
 
   //RUOKA
 
@@ -249,7 +287,7 @@ if (config.telegram.enabled) {
           tgbot.sendMessage(msg.chat.id, "Yleinen tukibotti lähes kaikkeen.\n\nTekijänä t.me/roysuomi\nGithub: github.com/kaikkitietokoneista/omenahelper\nKrediitit Roylle\n\nViesti /omena auttaa sinua käytön kanssa.")
       }
       else if (msg.text.toString().toLowerCase().includes("/omena" || msg.text.toString().toLowerCase() == "/omena@omenahelper_tgbot")) {
-        tgbot.sendMessage(msg.chat.id, `Osaan auttaa sinua Telegrammissa neljän asian kanssa: \n\n1. Läksyjen:\n\t<code>/laksyt</code>\n\t<code>/laksyt kaikki</code>\n\t<code>/laksyt menneet</code>\n2. ja ruuan\n\t<code>/ruoka</code>\n\t<code>/ruoka 2019-08-11</code>\n3. sekä sään\n\t<code>/weather</code>\n\t<code>/weather Helsinki</code>\n4. että tiedonhaun\n\t<code>/hae Kaikkitietokoneista</code>`, {
+        tgbot.sendMessage(msg.chat.id, `Osaan auttaa sinua Telegrammissa neljän asian kanssa: \n\n1. Läksyjen:\n\t<code>/laksyt</code>\n\t<code>/laksyt kaikki</code>\n\t<code>/laksyt menneet</code>\n2. ja ruuan\n\t<code>/ruoka</code>\n\t<code>/ruoka 2019-08-11</code>\n3. sekä sään\n\t<code>/weather</code>\n\t<code>/weather Helsinki</code>\n4. että tiedonhaun\n\t<code>/hae Kaikkitietokoneista</code>\n5. kuten myös Steam-tilien\n\t<code>/steam Tilinimi</code>`, {
           parse_mode: "HTML"
         })
       }
@@ -352,7 +390,50 @@ if (config.discord.enabled) {
         }
       })
     }
+    //LÄKSYT
+    else if (msg.content.startsWith("!läksyt") && config.laksyt.enabled) {
+      request(config.laksyt.url, {
+        method: "GET",
+        followAllRedirects: true,
+        auth: {
+          user: config.laksyt.username,
+          pass: config.laksyt.password
+        }
+      }, function (error, response, kalenteridata) {
+        let date = new Date()
+        let viesti = ''
+        let tehtavat = []
 
+        try {
+          let jcalData = ICAL.parse(kalenteridata)
+          let vcalendar = new ICAL.Component(jcalData)
+          let vtodos = vcalendar.getAllSubcomponents('vtodo')
+          viesti += '<b>Tehtävät: </b>\n\n'
+
+          vtodos.forEach((vtodo) => {
+            let summary = vtodo.getFirstPropertyValue('summary')
+            let description = vtodo.getFirstPropertyValue('description')
+            let due = vtodo.getFirstPropertyValue('due')
+            let duetimestamp = new Date(due.toString()).getTime()
+
+            if (duetimestamp > date.getTime()) {
+              tehtavat.push({summary: summary, description: description, due: due, duetimestamp: duetimestamp})
+            }
+          });
+
+          tehtavat.sort((a, b) => a.duetimestamp - b.duetimestamp)
+
+          tehtavat.forEach(({summary, description, due, duetimestamp}, i) => {
+            viesti += `<b>${summary} (</b><i>${moment.unix(duetimestamp/1000).locale('fi').format('LL')}</i><b>)</b>:\n<code>${description}</code>\n`
+          });
+        } catch (e) {
+          console.log(e);
+          viesti += 'Jotakin meni pieleen. Yritä myöhemmin uudestaan. Ota tarvittaessa yhteyttä ylläpitoon.'
+        } finally {
+          msg.reply(viesti)
+        }
+      })
+    }
     //HAKUKONE
     else if (msg.content.startsWith("!hae") && config.hakukone.enabled) {
       try {
@@ -397,7 +478,7 @@ if (config.discord.enabled) {
     }
     //TUKI
     else if (msg.content.startsWith("!omena")) {
-      msg.reply(`Osaan auttaa sinua Discordissa kolmen asian kanssa: \n`+/*\n1. Läksyjen (_!laksyt_) (Kehityksen alla)*/`\n1. ruuan (_!ruoka_)\n\t- katso koulut (_!koulut_)\n2. ja sään (_!sää_)\n3. sekä tiedonhaun kanssa (_!hae jotakin_)`);
+      msg.reply(`Osaan auttaa sinua Discordissa muutaman asian kanssa: \n`+/*\n1. Läksyjen (_!laksyt_) (Kehityksen alla)*/`\n1. ruuan (_!ruoka_)\n\t- katso koulut (_!koulut_)\n2. sään (_!sää_)\n3. tiedonhaun kanssa (_!hae jotakin_)\n4. annettujen läksyjen (_!läksyt_)`);
     }
   });
 

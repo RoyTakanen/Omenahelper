@@ -34,3 +34,5 @@ Discordissa lisää käyttäjä x haluamaasi ryhmään.
 8. Oma tehtävien tallennus ja lisäys
 9. Parempi koulujen listaus (CSS jne.)
 10. Kouluissa mahdollista antaa vain ID
+11. Cache
+12. Asynkroniset funktiot usein käytetyistä asioista 

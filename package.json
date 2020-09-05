@@ -1,10 +1,11 @@
 {
   "name": "omenahelper",
-  "version": "2.0.0",
+  "version": "3.0.2",
   "description": "Omenahelper auttaa sinua koulunkäynnissä useilla eri tavoilla.",
   "main": "app.js",
   "scripts": {
-    "test": "node ."
+    "start": "node .",
+    "test": "nodemon ."
   },
   "repository": {
     "type": "git",
@@ -26,6 +27,7 @@
     "ical.js": "^1.4.0",
     "js-levenshtein": "^1.1.6",
     "moment": "^2.27.0",
+    "node-cache": "^5.1.2",
     "node-telegram-bot-api": "^0.50.0",
     "openweather-apis": "^4.3.1",
     "request": "^2.88.2",
