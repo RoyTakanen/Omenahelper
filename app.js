@@ -7,14 +7,17 @@ const discord = require('discord.js');
 const levenshtein = require('js-levenshtein');
 const weather = require('openweather-apis');
 const Searxuser = require('searx-api');
-const NodeCache = require( "node-cache" );
+//const NodeCache = require( "node-cache" );
+const SteamAPI = require('steamapi');
 
-const cache = new NodeCache();
+//const cache = new NodeCache();
 const config = JSON.parse(fs.readFileSync('./data/config.json'))
 
 weather.setLang('fi');
 weather.setUnits('metric');
 weather.setAPPID(config.weather.key);
+
+const steam = new SteamAPI(config.steam.key);
 
 const searx = new Searxuser(
   config.hakukone.url, //Url
@@ -111,7 +114,7 @@ if (config.telegram.enabled) {
       });
     });
 
-    tgbot.onText(/\/weather$/, (msg, args) => {
+    tgbot.onText(/\/weather$/, (msg) => {
       tgbot.sendMessage(msg.chat.id, "Lähetä kaupunki noudattaen syntaksia /weather Helsinki.");
     })
   }
@@ -197,36 +200,66 @@ if (config.telegram.enabled) {
   }
 
   // STEAM
-  /*
-  tgbot.onText(/\/steam (.+)/, (msg, args) => {
+  if (config.steam.enabled) {
+    tgbot.onText(/\/steam (.+)/, (msg, args) => {
 
-    const name = args[1]; 
-    steam.resolve(`https://steamcommunity.com/id/${name}`).then(id => {
-      steam.getUserBans(id).then(bans => {
-        steam.getUserLevel(id).then(level => {
-          steam.getUserRecentGames(id).then(recgames => {
-            steam.getUserSummary(id).then(summary => {
-              tgbot.sendMessage(msg.chat.id, `
-              <b>Steam-tilin ${name} tiedot:</b>
-  
-  SteamID: <code>${summary.steamID}</code>
-  Taso: <code>${level}</code>
-  Viimeisin uloskirjautuminen: <code>${moment.unix(summary.lastLogOff).toLocaleString()}</code>
-  Luotu: <code>${moment.unix(summary.created).toLocaleString()}</code>
-  URL: <a href="${summary.url}">${summary.url}</a>
-  VAC Bans: <code>${bans.vacBans}</code>
-  Game Bans: <code>${bans.gameBans}</code>
-  <i>Viimeisestä bannistä on ${bans.daysSinceLastBan} päivää</i>
-  Viimeisin pelattu peli: <code>${recgames[0].name}</code>
-              `,{parse_mode : "HTML"});
-            });
-          });
-  
+      const nameorid = args[1]; 
+
+      if (nameorid === nameorid.match(/[0-9]/i)) {
+        let id = nameorid
+        steam.getUserBans(id).then(bans => {
+          steam.getUserLevel(id).then(level => {
+            steam.getUserRecentGames(id).then(recgames => {
+              steam.getUserSummary(id).then(summary => {
+                tgbot.sendMessage(msg.chat.id, `
+                <b>Steam-tilin ${name} tiedot:</b>
+    
+    SteamID: <code>${summary.steamID}</code>
+    Taso: <code>${level}</code>
+    Viimeisin uloskirjautuminen: <code>${moment.unix(summary.lastLogOff).toLocaleString()}</code>
+    Luotu: <code>${moment.unix(summary.created).toLocaleString()}</code>
+    URL: <a href="${summary.url}">${summary.url}</a>
+    VAC Bans: <code>${bans.vacBans}</code>
+    Game Bans: <code>${bans.gameBans}</code>
+    <i>Viimeisestä bannistä on ${bans.daysSinceLastBan} päivää</i>
+    Viimeisin pelattu peli: <code>${recgames[0].name}</code>
+                `,{parse_mode : "HTML"})
+              })
+            })
+          })
         })
-      })
-    });
-  });  
-*/
+      } else {
+        let name = nameorid
+        steam.resolve(`https://steamcommunity.com/id/${name}`).then(id => {
+          steam.getUserBans(id).then(bans => {
+            steam.getUserLevel(id).then(level => {
+              steam.getUserRecentGames(id).then(recgames => {
+                steam.getUserSummary(id).then(summary => {
+                  tgbot.sendMessage(msg.chat.id, `
+                  <b>Steam-tilin ${name} tiedot:</b>
+      
+      SteamID: <code>${summary.steamID}</code>
+      Taso: <code>${level}</code>
+      Viimeisin uloskirjautuminen: <code>${moment.unix(summary.lastLogOff).toLocaleString()}</code>
+      Luotu: <code>${moment.unix(summary.created).toLocaleString()}</code>
+      URL: <a href="${summary.url}">${summary.url}</a>
+      VAC Bans: <code>${bans.vacBans}</code>
+      Game Bans: <code>${bans.gameBans}</code>
+      <i>Viimeisestä bannistä on ${bans.daysSinceLastBan} päivää</i>
+      Viimeisin pelattu peli: <code>${recgames[0].name}</code>
+                  `,{parse_mode : "HTML"});
+                })
+              })
+            })
+          })
+        })
+      }
+    })
+  
+    tgbot.onText(/\/steam$/, (msg) => {
+      tgbot.sendMessage(msg.chat.id, `Sinun tulee antaa komennon jäkeen Steam-käyttäjänimi tai ID.`)
+    })
+  }
 
   //RUOKA
 
@@ -287,7 +320,7 @@ if (config.telegram.enabled) {
           tgbot.sendMessage(msg.chat.id, "Yleinen tukibotti lähes kaikkeen.\n\nTekijänä t.me/roysuomi\nGithub: github.com/kaikkitietokoneista/omenahelper\nKrediitit Roylle\n\nViesti /omena auttaa sinua käytön kanssa.")
       }
       else if (msg.text.toString().toLowerCase().includes("/omena" || msg.text.toString().toLowerCase() == "/omena@omenahelper_tgbot")) {
-        tgbot.sendMessage(msg.chat.id, `Osaan auttaa sinua Telegrammissa neljän asian kanssa: \n\n1. Läksyjen:\n\t<code>/laksyt</code>\n\t<code>/laksyt kaikki</code>\n\t<code>/laksyt menneet</code>\n2. ja ruuan\n\t<code>/ruoka</code>\n\t<code>/ruoka 2019-08-11</code>\n3. sekä sään\n\t<code>/weather</code>\n\t<code>/weather Helsinki</code>\n4. että tiedonhaun\n\t<code>/hae Kaikkitietokoneista</code>\n5. kuten myös Steam-tilien\n\t<code>/steam Tilinimi</code>`, {
+        tgbot.sendMessage(msg.chat.id, `Osaan auttaa sinua Telegrammissa muutaman asian kanssa: \n\n1. Läksyjen:\n\t<code>/laksyt</code>\n\t<code>/laksyt kaikki</code>\n\t<code>/laksyt menneet</code>\n2. ja ruuan\n\t<code>/ruoka</code>\n\t<code>/ruoka 2019-08-11</code>\n3. sekä sään\n\t<code>/weather</code>\n\t<code>/weather Helsinki</code>\n4. että tiedonhaun\n\t<code>/hae Kaikkitietokoneista</code>\n5. kuten myös Steam-tilien\n\t<code>/steam Tilinimi</code>`, {
           parse_mode: "HTML"
         })
       }
@@ -476,9 +509,68 @@ if (config.discord.enabled) {
         msg.reply("Lähetä kaupunki noudattaen syntaksia !sää Helsinki")
       }
     }
+    // STEAM
+    else if (msg.content.startsWith("!steam") && config.steam.enabled) {
+      let nameorid = msg.content.split(' ')[1]
+
+      if (nameorid) {
+        if (nameorid === nameorid.match(/[0-9]/i)) {
+          let id = nameorid
+          steam.getUserBans(id).then(bans => {
+            steam.getUserLevel(id).then(level => {
+              steam.getUserRecentGames(id).then(recgames => {
+                steam.getUserSummary(id).then(summary => {
+                  msg.reply(`
+                  **Steam-tilin ${name} tiedot:**
+
+SteamID: \`\`\`${summary.steamID}\`\`\`
+Taso: \`\`\`${level}\`\`\`
+Viimeisin uloskirjautuminen: \`\`\`${moment.unix(summary.lastLogOff).toLocaleString()}\`\`\`
+Luotu: \`\`\`${moment.unix(summary.created).toLocaleString()}\`\`\`
+URL: "${summary.url}"
+VAC Bans: \`\`\`${bans.vacBans}\`\`\`
+Game Bans: \`\`\`${bans.gameBans}\`\`\`
+_Viimeisestä bannistä on ${bans.daysSinceLastBan} päivää_
+Viimeisin pelattu peli: \`\`\`${recgames[0].name}\`\`\`
+                  `);
+                })
+              })
+            })
+          })
+        } else {
+          let name = nameorid
+          steam.resolve(`https://steamcommunity.com/id/${name}`).then(id => {
+            steam.getUserBans(id).then(bans => {
+              steam.getUserLevel(id).then(level => {
+                steam.getUserRecentGames(id).then(recgames => {
+                  steam.getUserSummary(id).then(summary => {
+                    msg.reply(`
+                    **Steam-tilin ${name} tiedot:**
+
+SteamID: \`\`\`${summary.steamID}\`\`\`
+Taso: \`\`\`${level}\`\`\`
+Viimeisin uloskirjautuminen: \`\`\`${moment.unix(summary.lastLogOff).toLocaleString()}\`\`\`
+Luotu: \`\`\`${moment.unix(summary.created).toLocaleString()}\`\`\`
+URL: "${summary.url}"
+VAC Bans: \`\`\`${bans.vacBans}\`\`\`
+Game Bans: \`\`\`${bans.gameBans}\`\`\`
+_Viimeisestä bannistä on ${bans.daysSinceLastBan} päivää_
+Viimeisin pelattu peli: \`\`\`${recgames[0].name}\`\`\`
+                    `);
+                  })
+                })
+              })
+            })
+          })
+        }  
+      } else {
+        msg.reply(`Sinun tulee antaa komennon jäkeen Steam-käyttäjänimi tai ID.`)
+      }
+    }
+
     //TUKI
     else if (msg.content.startsWith("!omena")) {
-      msg.reply(`Osaan auttaa sinua Discordissa muutaman asian kanssa: \n`+/*\n1. Läksyjen (_!laksyt_) (Kehityksen alla)*/`\n1. ruuan (_!ruoka_)\n\t- katso koulut (_!koulut_)\n2. sään (_!sää_)\n3. tiedonhaun kanssa (_!hae jotakin_)\n4. annettujen läksyjen (_!läksyt_)`);
+      msg.reply(`Osaan auttaa sinua Discordissa muutaman asian kanssa: \n`+/*\n1. Läksyjen (_!laksyt_) (Kehityksen alla)*/`\n1. ruuan (_!ruoka_)\n\t- katso koulut (_!koulut_)\n2. sään (_!sää_)\n3. tiedonhaun kanssa (_!hae jotakin_)\n4. annettujen läksyjen (_!läksyt_)\n5. steam-tilien kanssa (_!steam_)`);
     }
   });
 
