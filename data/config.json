@@ -24,9 +24,5 @@
     "enabled": true,
     "url": "https://searx.asdew.kaikkitietokoneista.net/",
     "protocol": "https"
-  },
-  "steam": {
-    "enabled": true,
-    "key": ""
   }
 }

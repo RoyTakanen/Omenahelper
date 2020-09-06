@@ -31,7 +31,6 @@
     "node-telegram-bot-api": "^0.50.0",
     "openweather-apis": "^4.3.1",
     "request": "^2.88.2",
-    "searx-api": "^1.0.2",
-    "steamapi": "^2.1.1"
+    "searx-api": "^1.0.2"
   }
 }

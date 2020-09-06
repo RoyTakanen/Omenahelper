@@ -8,7 +8,6 @@ const levenshtein = require('js-levenshtein');
 const weather = require('openweather-apis');
 const Searxuser = require('searx-api');
 //const NodeCache = require( "node-cache" );
-const SteamAPI = require('steamapi');
 
 //const cache = new NodeCache();
 const config = JSON.parse(fs.readFileSync('./data/config.json'))
@@ -16,8 +15,6 @@ const config = JSON.parse(fs.readFileSync('./data/config.json'))
 weather.setLang('fi');
 weather.setUnits('metric');
 weather.setAPPID(config.weather.key);
-
-const steam = new SteamAPI(config.steam.key);
 
 const searx = new Searxuser(
   config.hakukone.url, //Url
@@ -55,32 +52,31 @@ function vertaaKoulut(nimi) {
 }
 
 function icontToEmoji(icon) {
-  /* icon to emoji */
-  if (icon == "01d") {
+  if (icon === "01d") {
     return '🌞';
   }
-  else if (icon == "02d" || "02n") {
+  else if (icon === "02d" || icon === "02n") {
     return '⛅';
   }
-  else if (icon == "03d" || "03n") {
+  else if (icon === "03d" || icon === "03n") {
     return '☁️';
   }
-  else if (icon == "04d"|| "04n") {
+  else if (icon === "04d"|| icon === "04n") {
     return '☁️';
   }
-  else if (icon == "09d" || "09n") {
+  else if (icon === "09d" || icon === "09n") {
     return '🌧️';
   }
-  else if (icon == "10d" || "10n") {
+  else if (icon === "10d" || icon === "10n") {
     return '🌧️';
   }
-  else if (icon == "11d" || "11n") {
+  else if (icon === "11d" || icon === "11n") {
     return '⛈️';
   }
-  else if (icon == "13d" || "13n") {
+  else if (icon === "13d" || icon === "13n") {
     return '❄️';
   }
-  else if (icon == "50d" || "50n") {
+  else if (icon === "50d" || icon === "50n") {
     return '🌫️';
   }
 }
@@ -199,67 +195,6 @@ if (config.telegram.enabled) {
     })
   }
 
-  // STEAM
-  if (config.steam.enabled) {
-    tgbot.onText(/\/steam (.+)/, (msg, args) => {
-
-      const nameorid = args[1]; 
-
-      if (nameorid === nameorid.match(/[0-9]/i)) {
-        let id = nameorid
-        steam.getUserBans(id).then(bans => {
-          steam.getUserLevel(id).then(level => {
-            steam.getUserRecentGames(id).then(recgames => {
-              steam.getUserSummary(id).then(summary => {
-                tgbot.sendMessage(msg.chat.id, `
-                <b>Steam-tilin ${name} tiedot:</b>
-    
-    SteamID: <code>${summary.steamID}</code>
-    Taso: <code>${level}</code>
-    Viimeisin uloskirjautuminen: <code>${moment.unix(summary.lastLogOff).toLocaleString()}</code>
-    Luotu: <code>${moment.unix(summary.created).toLocaleString()}</code>
-    URL: <a href="${summary.url}">${summary.url}</a>
-    VAC Bans: <code>${bans.vacBans}</code>
-    Game Bans: <code>${bans.gameBans}</code>
-    <i>Viimeisestä bannistä on ${bans.daysSinceLastBan} päivää</i>
-    Viimeisin pelattu peli: <code>${recgames[0].name}</code>
-                `,{parse_mode : "HTML"})
-              })
-            })
-          })
-        })
-      } else {
-        let name = nameorid
-        steam.resolve(`https://steamcommunity.com/id/${name}`).then(id => {
-          steam.getUserBans(id).then(bans => {
-            steam.getUserLevel(id).then(level => {
-              steam.getUserRecentGames(id).then(recgames => {
-                steam.getUserSummary(id).then(summary => {
-                  tgbot.sendMessage(msg.chat.id, `
-                  <b>Steam-tilin ${name} tiedot:</b>
-      
-      SteamID: <code>${summary.steamID}</code>
-      Taso: <code>${level}</code>
-      Viimeisin uloskirjautuminen: <code>${moment.unix(summary.lastLogOff).toLocaleString()}</code>
-      Luotu: <code>${moment.unix(summary.created).toLocaleString()}</code>
-      URL: <a href="${summary.url}">${summary.url}</a>
-      VAC Bans: <code>${bans.vacBans}</code>
-      Game Bans: <code>${bans.gameBans}</code>
-      <i>Viimeisestä bannistä on ${bans.daysSinceLastBan} päivää</i>
-      Viimeisin pelattu peli: <code>${recgames[0].name}</code>
-                  `,{parse_mode : "HTML"});
-                })
-              })
-            })
-          })
-        })
-      }
-    })
-  
-    tgbot.onText(/\/steam$/, (msg) => {
-      tgbot.sendMessage(msg.chat.id, `Sinun tulee antaa komennon jäkeen Steam-käyttäjänimi tai ID.`)
-    })
-  }
 
   //RUOKA
 
@@ -507,64 +442,6 @@ if (config.discord.enabled) {
         });
       } else {
         msg.reply("Lähetä kaupunki noudattaen syntaksia !sää Helsinki")
-      }
-    }
-    // STEAM
-    else if (msg.content.startsWith("!steam") && config.steam.enabled) {
-      let nameorid = msg.content.split(' ')[1]
-
-      if (nameorid) {
-        if (nameorid === nameorid.match(/[0-9]/i)) {
-          let id = nameorid
-          steam.getUserBans(id).then(bans => {
-            steam.getUserLevel(id).then(level => {
-              steam.getUserRecentGames(id).then(recgames => {
-                steam.getUserSummary(id).then(summary => {
-                  msg.reply(`
-                  **Steam-tilin ${name} tiedot:**
-
-SteamID: \`\`\`${summary.steamID}\`\`\`
-Taso: \`\`\`${level}\`\`\`
-Viimeisin uloskirjautuminen: \`\`\`${moment.unix(summary.lastLogOff).toLocaleString()}\`\`\`
-Luotu: \`\`\`${moment.unix(summary.created).toLocaleString()}\`\`\`
-URL: "${summary.url}"
-VAC Bans: \`\`\`${bans.vacBans}\`\`\`
-Game Bans: \`\`\`${bans.gameBans}\`\`\`
-_Viimeisestä bannistä on ${bans.daysSinceLastBan} päivää_
-Viimeisin pelattu peli: \`\`\`${recgames[0].name}\`\`\`
-                  `);
-                })
-              })
-            })
-          })
-        } else {
-          let name = nameorid
-          steam.resolve(`https://steamcommunity.com/id/${name}`).then(id => {
-            steam.getUserBans(id).then(bans => {
-              steam.getUserLevel(id).then(level => {
-                steam.getUserRecentGames(id).then(recgames => {
-                  steam.getUserSummary(id).then(summary => {
-                    msg.reply(`
-                    **Steam-tilin ${name} tiedot:**
-
-SteamID: \`\`\`${summary.steamID}\`\`\`
-Taso: \`\`\`${level}\`\`\`
-Viimeisin uloskirjautuminen: \`\`\`${moment.unix(summary.lastLogOff).toLocaleString()}\`\`\`
-Luotu: \`\`\`${moment.unix(summary.created).toLocaleString()}\`\`\`
-URL: "${summary.url}"
-VAC Bans: \`\`\`${bans.vacBans}\`\`\`
-Game Bans: \`\`\`${bans.gameBans}\`\`\`
-_Viimeisestä bannistä on ${bans.daysSinceLastBan} päivää_
-Viimeisin pelattu peli: \`\`\`${recgames[0].name}\`\`\`
-                    `);
-                  })
-                })
-              })
-            })
-          })
-        }  
-      } else {
-        msg.reply(`Sinun tulee antaa komennon jäkeen Steam-käyttäjänimi tai ID.`)
       }
     }
 
