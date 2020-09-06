@@ -25,11 +25,11 @@ Discordissa lisää käyttäjä x haluamaasi ryhmään.
 ## To do
 
 1. Säännöllinen viestinlähetys
-2. Tämä myös Discordiin
-3. Läksyt
-4. Parempi konfigurointi
+2. ~~Tämä myös Discordiin~~
+3. ~~Läksyt~~
+4. ~~Parempi konfigurointi~~
 5. Siistimpi koodi
-6. Vaihda request-kirjastoon
+6. ~~Vaihda request-kirjastoon~~
 7. Oma hallinointiliittymä
 8. Oma tehtävien tallennus ja lisäys
 9. Parempi koulujen listaus (CSS jne.)
