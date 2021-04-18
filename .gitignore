@@ -1,5 +1,5 @@
-# This project
-data/config.json*
+#Data storage
+data.db*
 
 # Logs
 logs

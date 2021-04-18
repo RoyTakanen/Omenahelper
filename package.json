@@ -13,8 +13,8 @@
   },
   "keywords": [
     "Omenahelper",
-    "School",
-    "Assistant"
+    "Kouluruoka",
+    "Apulainen"
   ],
   "author": "Kaikkitietokoneista",
   "license": "AGPL-3.0-or-later",
@@ -23,14 +23,12 @@
   },
   "homepage": "https://github.com/kaikkitietokoneista/Omenahelper#readme",
   "dependencies": {
+    "axios": "^0.21.1",
     "discord.js": "^12.3.1",
-    "ical.js": "^1.4.0",
+    "dotenv": "^8.2.0",
     "js-levenshtein": "^1.1.6",
     "moment": "^2.27.0",
-    "node-cache": "^5.1.2",
     "node-telegram-bot-api": "^0.50.0",
-    "openweather-apis": "^4.3.1",
-    "request": "^2.88.2",
-    "searx-api": "^1.0.2"
+    "sqlite3": "^5.0.2"
   }
 }
