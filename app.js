@@ -21,7 +21,7 @@ async function getSchools() {
 async function getFood(schoolId) {
   try {
     const today = moment().format('YYYY-MM-DD');
-    return axios.get(`https://api.koulusafka.fi/get/index.php?a=2021-4-18&b=fgfdg905hnm490jiofsdydy346gfgd&c=${schoolId}`)
+    return axios.get(`https://api.koulusafka.fi/get/index.php?a=${today}&b=fgfdg905hnm490jiofsdydy346gfgd&c=${schoolId}`)
       .then(function (response) {
         return response.data
       })
