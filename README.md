@@ -21,5 +21,7 @@ npm start
 ## Komennot
 
 `/hae <koulu>` - hae kouluja nimellä tietokannasta
+
 `/tilaa <koulu>` - merkitse koulu omaksi
+
 `/menu` - katso oman koulun ruoka
