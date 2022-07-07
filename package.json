@@ -27,7 +27,7 @@
     "discord.js": "^12.3.1",
     "dotenv": "^8.2.0",
     "js-levenshtein": "^1.1.6",
-    "moment": "^2.27.0",
+    "moment": "^2.29.4",
     "node-telegram-bot-api": "^0.50.0",
     "sqlite3": "^5.0.2"
   }
